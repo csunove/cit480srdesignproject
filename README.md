@@ -1,7 +1,30 @@
-# Mentor & Me — R1 walking skeleton
+# Mentor & Me v1
 
 CSUN CIT Senior Design, Team 3. React **18**, TypeScript, Vite, Tailwind CSS,
 Python **3.11**, FastAPI, SQLAlchemy, PostgreSQL **16**, Alembic, and GitHub Actions.
+
+Mentor & Me connects CSUN students and alumni for mentorship. The team has deployed
+the starter backend and frontend on AWS and added the Figma Make design as an
+interactive prototype.
+
+## Live site and current progress
+
+- [Project landing page](https://mentorandme.com/)
+- [Frontend prototype](https://mentorandme.com/prototype)
+- [API health](https://mentorandme.com/api/health)
+
+| Area | Current implementation | Next work |
+| --- | --- | --- |
+| Frontend | React prototype with signup, mentor and mentee profile setup, discovery, requests, matches, and chat screens | Review desktop and mobile layouts and connect screens to backend endpoints |
+| Backend foundation | FastAPI health endpoints, PostgreSQL connectivity checks, and a baseline migration | Implement account, profile, matching, request, and messaging endpoints |
+| Data | The baseline migration creates and seeds `system_release` | Add domain tables and migrations for the application features |
+| Hosting | AWS deployment with the `mentorandme.com` domain | Confirm the deployment branch and document the deployment procedure with the hosting teammate |
+| Validation | Backend, frontend, and container CI checks passed for the frontend prototype PR | Review the deployed user flows and repeat checks for later changes |
+
+The prototype uses sample profiles, fixed match percentages, and browser memory.
+Signup and chat interactions demonstrate the intended flow. Real account creation,
+authentication, saved profiles, calculated recommendations, and persistent messages
+are planned backend integration work. Use sample information when reviewing it.
 
 ## Run with Docker
 
@@ -95,12 +118,11 @@ alembic downgrade base
 alembic upgrade head
 ```
 
-`0001_r1_baseline` creates and seeds `system_release`. It is a real, reversible
-starter migration. It deliberately does **not** implement the ten domain tables,
-authentication, matching, embeddings, Redis, or seed profiles. Those belong to
-subsequent increments. Before R2, resolve the spec's pending-match versus accepted-
-match ambiguity and design database enforcement for conversation participants and
-accepted/active matches: a foreign key alone does not enforce those rules.
+`0001_r1_baseline` creates and seeds `system_release`. Subsequent migrations
+will add application tables for accounts, profiles, requests, matches, and messages.
+Before implementing requests and matches, agree on the transition from a pending
+request to a mutually accepted connection and enforce conversation access in the
+backend and database.
 
 New models go in `app/models.py`, then use `alembic revision --autogenerate -m "..."`
 and review the generated migration. Never auto-create schema on API startup.
@@ -124,39 +146,69 @@ migration upgrade/downgrade/upgrade, frontend tests and build, and a Docker Comp
 smoke test through the frontend proxy. Backend dependencies and frontend dependencies
 are locked in requirements.txt and pnpm-lock.yaml. Refresh them deliberately.
 
-## Branches and repository setup
+## Proposed matching approach
 
-Work on `feat/<description>` and open a PR for teammate review. This delivery is on
-`feat/r1-walking-skeleton`; it has not been pushed. Repository inspection found no
-remote refs, so there is no existing main commit to target yet. The repository is
-readable anonymously (public), despite the older spec describing it as private.
-Write access and branch protection have not been verified.
+The following weights are a starting proposal for team review. The prototype's
+current match percentages are fixed demo values. The backend will calculate and
+return recommendations after profiles are stored in the database.
 
-A repository owner must establish the initial default branch using the team's approved
-bootstrap process, then require one approval and passing `backend`, `frontend`, and
-`containers` CI checks for main. Do not bypass protection or push this work directly
-to main. After default-branch setup, push this feature branch and create a PR.
-No GitHub credentials are included. Each teammate should configure their own Git commit identity.
+First, filter candidates using agreed eligibility rules, including mentor role,
+active status, and available mentoring capacity. Rank eligible mentors using the
+student's preferences and the mentor's profile.
 
-## Staging handoff — information needed
+| Comparison | Proposed weight |
+| --- | --- |
+| Mentor expertise aligns with student interests | 40% |
+| Mentor can support the student's career goals | 30% |
+| Availability overlaps | 20% |
+| Preferred meeting format aligns | 10% |
 
-No AWS service, credentials, infrastructure, or live database has been assumed or
-modified. Before staging deployment, confirm:
+Normalize each comparison to a value between 0 and 1, multiply by its weight, and
+sum the results for a score from 0 to 100. Before implementing scoring, agree on
+shared interest and goal tags, availability fields and time zones, treatment of
+missing answers, and a stable order for tied scores. The score describes profile
+alignment. A confirmed mentorship requires both participants to accept.
 
-1. Exact service (RDS, Aurora PostgreSQL, or PostgreSQL on EC2), engine/version,
-   hostname, port, and database name.
-2. Network path from the API: VPC/subnet/security groups, VPN or tunnel if needed.
-   Avoid opening PostgreSQL to the public internet.
-3. Runtime database user and secret delivery mechanism, plus a separate migration
-   role with DDL privileges. Keep secrets outside Git and frontend configuration.
-4. Required TLS mode and CA certificate path; use verified TLS for remote connections.
-5. Whether pgvector is supported and who can enable it. R1 does not require it.
-6. Staging compute service, domain, HTTPS certificate/termination, deployment access,
-   and the teammate responsible for deployment.
+## Next development priorities
 
-Use the same images, inject staging configuration securely, run migrations once,
-then start the API and configure `/api` routing. Local compose.yaml is a development
-stack and always uses its own `db`; do not point it at the existing cloud database.
-Require a healthy API, app load, and green PR checks before marking R1 complete.
-**The spec's full R1 exit criteria are not met until HTTPS staging is deployed and CI
-has actually run successfully on GitHub.**
+1. Implement account creation and login with backend validation.
+2. Save mentor and mentee profiles and verify they persist after logout and reload.
+3. Implement mentor eligibility and the agreed matching score, then return ranked
+   recommendations to the discovery screen.
+4. Save requests and track acceptance by both participants.
+5. Enable persistent conversations for accepted matches.
+6. Review complete flows on desktop and mobile and exercise validation, loading,
+   empty, and error states.
+
+## Branches and review
+
+Use `feat/<description>` for feature work and open a pull request for teammate
+review. The repository's default branch is `feat/figma-prototype`. The former
+`feat/r1-walking-skeleton` branch is now named `feat/r1-mentor-and-me-v2`.
+
+Create documentation updates from the current default branch and target that branch
+in the pull request. Feature work may target another integration branch when agreed
+with the team.
+
+Confirm the current integration and AWS deployment branch with the teammate who
+manages hosting before choosing a pull request's base. Require one teammate's
+approval and passing `backend`, `frontend`, and `containers` checks before merging.
+Each contributor should configure their own Git commit identity.
+
+## Deployment coordination
+
+The hosting teammate manages the AWS environment and domain. Coordinate deployment
+through that existing setup. Record the actual AWS compute and database services,
+region, deployment branch, and deployment steps once the hosting teammate confirms
+them.
+
+The local `compose.yaml` starts its own development database. For AWS deployment,
+supply the cloud database connection and secrets through the hosting environment,
+apply the reviewed migrations, and configure `/api` routing to FastAPI. Keep
+credentials outside Git and frontend code. Confirm the database network path and
+TLS configuration with the hosting teammate.
+
+After deployment, check the landing page, `/prototype`, `/api/health`, and the
+features delivered by the release. A healthy database probe verifies connection
+availability. Feature readiness also requires the relevant schema, endpoints, and
+complete user flows to work.
