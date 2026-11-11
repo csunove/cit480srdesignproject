@@ -58,6 +58,14 @@ bundle. The same frontend image can be used across environments with a same-orig
 explicit offline message, without caching health responses. Full offline operation
 and cross-browser installation verification remain future work.
 
+## Figma prototype
+
+Open **Open the design prototype** on the landing page, or visit
+http://localhost:5173/prototype with Vite (http://localhost:8080/prototype
+with Docker). The prototype runs with Vite alone. Use sample info when trying the
+signup and profile flows. The screens use local state and demo data for accounts,
+profiles, mentor discovery, requests, matches, and chat.
+
 ## Configuration
 
 `DATABASE_URL` is required. Example shape (not real credentials):

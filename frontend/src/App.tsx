@@ -29,6 +29,7 @@ export default function App() {
       <p className="mb-4 font-semibold text-navy-700">A connection. A new possibility.</p>
       <h1 className="max-w-2xl text-4xl font-semibold leading-tight text-navy-900 md:text-6xl">Your next chapter starts with a conversation.</h1>
       <p className="mt-6 max-w-xl text-lg leading-8 text-ink-500">Mentor & Me brings CSUN students and alumni together. Find shared interests, choose each other, and grow together.</p>
+      <a href="/prototype" className="mt-8 inline-block rounded bg-navy-900 px-5 py-3 font-semibold text-white hover:bg-navy-700">Open the design prototype</a>
       <section aria-labelledby="status-heading" className="mt-12 max-w-xl rounded-lg border border-navy-100 bg-white p-6 shadow-sm">
         <p className="text-ink-500">Release 1 · Walking skeleton</p><h2 id="status-heading" className="mt-2 text-2xl font-semibold text-navy-900">Connection status</h2>
         <div role="status" aria-live="polite" className="my-5 space-y-2">
